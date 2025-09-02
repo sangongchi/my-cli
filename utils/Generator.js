@@ -1,10 +1,10 @@
-const inquirer = require('inquirer');
-const download = require('download-git-repo');
-const ora = require('ora');
-const util = require('util');
-const figlet = require('figlet');
-const chalk = require('chalk');
-const { getRepoList, getTagList } = require('./template');
+import inquirer from 'inquirer';
+import download from 'download-git-repo'; // 下载 git 模板
+import ora from 'ora';
+import util from 'util';
+import figlet from 'figlet';
+import chalk from 'chalk';
+import { getRepoList, getTagList } from './template.js';
 
 class Generator {
   constructor(name, targetDir) {
@@ -18,11 +18,14 @@ class Generator {
   async getRepo() {
     try {
       const repos = await getRepoList();
-      if (!repos) return;
+      const repoChoices = Array.isArray(repos)
+        ? repos.map((r) => (typeof r === 'string' ? r : r && r.name)).filter(Boolean)
+        : [];
+      if (!repoChoices.length) return;
       const { repo } = await inquirer.prompt({
         name: 'repo',
         type: 'list',
-        choices: repos,
+        choices: repoChoices,
         message: '请选择模板：',
       });
       if (repo) {
@@ -36,10 +39,11 @@ class Generator {
   async getTag(repo) {
     try {
       const tags = await getTagList(repo);
-      if (!tags || !tags.length) {
+      const tagItems = Array.isArray(tags) ? tags : [];
+      if (!tagItems.length) {
         this.download(repo);
       } else {
-        const tagNameList = tags.map((item) => item.name);
+        const tagNameList = tagItems.map((item) => (typeof item === 'string' ? item : item && item.name)).filter(Boolean);
         // 让用户主动选择对应的版本
         const { tag } = await inquirer.prompt({
           name: 'tag',
@@ -60,22 +64,15 @@ class Generator {
       const repoUrl = `sangongchi1/${repo}${tag ? '#' + tag : ''}`;
       console.log(`------start download---- ${this.name}---->${repoUrl}`);
       spinner = ora('Loading unicorns').start();
-      await this.downloadGitRepo(repoUrl, this.name);
+      await this.downloadGitRepo(repoUrl, this.name, {});
       spinner.succeed('项目创建成功');
-      console.log(
-        figlet.textSync('SUCCESS!', {
-          horizontalLayout: 'default',
-          verticalLayout: 'default',
-          width: 80,
-          whitespaceBreak: true,
-        })
-      );
+      console.log(figlet.textSync('SUCCESS!'));
     } catch (e) {
-      spinner.fail('项目创建失败');
+      spinner && spinner.fail('项目创建失败');
     }
   }
 
   // 创建逻辑
   create() {}
 }
-module.exports = Generator;
+export default Generator;

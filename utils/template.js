@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from 'axios';
 
 
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8';
@@ -24,7 +24,5 @@ async function getRepoList() {
 async function getTagList(repo) {
   return axios.get(`https://api.github.com/repos/sangongchi1/${repo}/tags`);
 }
-module.exports = {
-  getRepoList,
-  getTagList,
-};
+
+export { getRepoList, getTagList };
